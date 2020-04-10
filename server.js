@@ -78,6 +78,28 @@ function handleRestaurants(request, response) {
 
 }
 
+
+app.get('/weather', handleWeather);
+
+function handleWeather(request, response) {
+  // use darksky fake data
+  // eventually will be an api call
+  let weatherData = require('./data/darksky.json');
+  let listofDays = [];
+
+  weatherData.daily.data.forEach( day => {
+    let weather = new Weather(day);
+    listofDays.push(weather);
+  })
+  response.json(listofDays);
+}
+
+function Weather(data) {
+  this.date = data.time;
+  this.summary = data.summary;
+}
+
+
 function Restaurant(data) {
   this.name = data.restaurant.name;
   this.cuisines = data.restaurant.cuisines;

@@ -39,7 +39,7 @@ function handleLocation( request, response ) {
   let city = request.query.city;
   // eventually, get this from a real live API
   // But today, pull it from a file.
-  let locationData = require('./data/location.json');
+  let locationData = require('./data/geo.json');
   let location = new Location(city, locationData[0]);
   response.json(location);
 }

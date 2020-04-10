@@ -95,8 +95,8 @@ function handleWeather(request, response) {
 }
 
 function Weather(data) {
-  this.date = data.time;
-  this.summary = data.summary;
+  this.time = data.time;
+  this.forecast = data.summary;
 }
 
 

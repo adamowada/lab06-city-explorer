@@ -36,12 +36,22 @@ app.get('/cats', (request, response) => {
 app.get('/location', handleLocation);
 
 function handleLocation( request, response ) {
-  let city = request.query.city;
-  // eventually, get this from a real live API
-  // But today, pull it from a file.
-  let locationData = require('./data/geo.json');
-  let location = new Location(city, locationData[0]);
-  response.json(location);
+  try {
+    let city = request.query.city;
+    // eventually, get this from a real live API
+    // But today, pull it from a file.
+    let locationData = require('./data/geo.json');
+    let location = new Location(city, locationData[0]);
+    throw 'john is ugly or something';
+    response.json(location);
+  }
+  catch(error) {
+    let errorObject = {
+      status: 500,
+      responseText: error,
+    };
+    response.status(500).json(errorObject);
+  }
 }
 
 function Location(city, data) {
@@ -51,32 +61,9 @@ function Location(city, data) {
   this.longitude = data.lon;
 }
 
-/* Restaurants
 
-  {
-    "restaurant": "Serious Pie",
-    "cuisines": "Pizza, Italian",
-    "locality": "Belltown"
-  },
-*/
 
-app.get('/restaurants', handleRestaurants);
 
-function handleRestaurants(request, response) {
-  // Eventually, will be an API call
-  // Today ... get a file
-
-  let restaurantData = require('./data/restaurants.json');
-  let listOfRestaurants = [];
-
-  restaurantData.nearby_restaurants.forEach( r => {
-    let restaurant = new Restaurant(r);
-    listOfRestaurants.push(restaurant);
-  });
-
-  response.json(listOfRestaurants);
-
-}
 
 
 app.get('/weather', handleWeather);
@@ -94,11 +81,11 @@ function handleWeather(request, response) {
   response.json(listofDays);
 }
 
+
 function Weather(data) {
   this.time = data.time;
   this.forecast = data.summary;
 }
-
 
 function Restaurant(data) {
   this.name = data.restaurant.name;

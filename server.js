@@ -31,14 +31,16 @@ function handleLocation( request, response ) {
       q: city,
       format: 'json',
       limit: 1,
-    }
+    };
+
     superagent.get(url)
       .query(queryStringParams)
       .then( data => {
         let locationData = data.body[0];
+        console.log(locationData);
         let location = new Location(city, locationData);
         response.json(location);
-      })
+      });
   }
   catch(error) {
     let errorObject = {

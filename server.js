@@ -22,10 +22,23 @@ function handleLocation( request, response ) {
     let city = request.query.city;
     // eventually, get this from a real live API
     // But today, pull it from a file.
-    let locationData = require('./data/geo.json');
-    let location = new Location(city, locationData[0]);
+
     // throw 'john is ugly or something';
-    response.json(location);
+
+    const url = 'https://us1.locationiq.com/v1/search.php';
+    const queryStringParams = {
+      key: process.env.LOCATION_TOKEN,
+      q: city,
+      format: 'json',
+      limit: 1,
+    }
+    superagent.get(url)
+      .query(queryStringParams)
+      .then( data => {
+        let locationData = data.body[0];
+        let location = new Location(city, locationData);
+        response.json(location);
+      })
   }
   catch(error) {
     let errorObject = {

@@ -7,6 +7,7 @@
 require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
+const superagent = require('superagent');
 
 const PORT = process.env.PORT;
 
@@ -49,14 +50,33 @@ function handleWeather(request, response) {
   try {
   // use darksky fake data
   // eventually will be an api call
-    let weatherData = require('./data/darksky.json');
+  // let weatherData = require('./data/darksky.json');
     let listofDays = [];
-    weatherData.daily.data.forEach( day => {
-      let weather = new Weather(day);
-      listofDays.push(weather);
-    })
-    response.json(listofDays);
+    let url = 'https://api.darksky.net/forecast';
+    let lat = request.query.latitude;
+    let lon = request.query.longitude;
+
+    // user-key
+
+    superagent.get(url)
+      .set('user-key', process.env.DARKSKY_TOKEN)
+      .set('latitude', lat)
+      .set('longitude', lon)
+      .then( data => {
+        data.daily.data.map( day => {
+          let weather = new Weather(day);
+          listofDays.push(weather);
+        })
+        response.json(listofDays);
+      }).catch( error => console.log(error));
+
+    // weatherData.daily.data.map( day => {
+    //   let weather = new Weather(day);
+    //   listofDays.push(weather);
+    // })
+
   }
+
   catch(error) {
     let errorObject = {
       status: 500,

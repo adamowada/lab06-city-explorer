@@ -37,7 +37,7 @@ function handleLocation( request, response ) {
       .query(queryStringParams)
       .then( data => {
         let locationData = data.body[0];
-        console.log(locationData);
+        // console.log(locationData);
         let location = new Location(city, locationData);
         response.json(location);
       });
@@ -63,35 +63,29 @@ app.get('/weather', handleWeather);
 
 function handleWeather(request, response) {
   try {
-  // use darksky fake data
-  // eventually will be an api call
-  // let weatherData = require('./data/darksky.json');
-    let listofDays = [];
-    let url = 'https://api.darksky.net/forecast';
+
+    // use darksky fake data
+    // eventually will be an api call
+    // let weatherData = require('./data/darksky.json');
+
+    let url = 'https://api.darksky.net/forecast/';
+    let key = process.env.DARKSKY_TOKEN;
     let lat = request.query.latitude;
     let lon = request.query.longitude;
 
     // user-key
+    let newUrl = `${url}${key}/${lat},${lon}`;
 
-    superagent.get(url)
-      .set('user-key', process.env.DARKSKY_TOKEN)
-      .set('latitude', lat)
-      .set('longitude', lon)
+    superagent.get(newUrl)
       .then( data => {
-        data.daily.data.map( day => {
-          let weather = new Weather(day);
-          listofDays.push(weather);
+        let listOfDays = data.body.daily.data.map( day => {
+          return new Weather(day);
         })
-        response.json(listofDays);
-      }).catch( error => console.log(error));
-
-    // weatherData.daily.data.map( day => {
-    //   let weather = new Weather(day);
-    //   listofDays.push(weather);
-    // })
-
+        response.json(listOfDays);
+      }).catch( error => {
+        console.log(error);
+      });
   }
-
   catch(error) {
     let errorObject = {
       status: 500,
@@ -102,7 +96,7 @@ function handleWeather(request, response) {
 }
 
 function Weather(data) {
-  this.time = data.time;
+  this.time = data.time; // format to date (not epoch)
   this.forecast = data.summary;
 }
 

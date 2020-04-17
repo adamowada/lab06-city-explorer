@@ -9,6 +9,12 @@ const cors = require('cors');
 const express = require('express');
 const superagent = require('superagent');
 
+// pg
+const pg = require('pg');
+const client = new pg.Client(process.env.DATABASE_URL);
+client.connect();
+
+
 const PORT = process.env.PORT;
 
 const app = express();
@@ -18,38 +24,47 @@ app.use(cors());
 app.get('/location', handleLocation);
 
 function handleLocation( request, response ) {
-  try {
-    let city = request.query.city;
-    // eventually, get this from a real live API
-    // But today, pull it from a file.
+  let city = request.query.city.toLowerCase();
+  console.log('the city variable is', city);
+  // check if in sql db first
+  const SQL = `SELECT * FROM locations WHERE search_query='${city}'`;
 
-    // throw 'john is ugly or something';
 
-    const url = 'https://us1.locationiq.com/v1/search.php';
-    const queryStringParams = {
-      key: process.env.LOCATION_TOKEN,
-      q: city,
-      format: 'json',
-      limit: 1,
-    };
+  // if( locationCache[city] ) {
+  //   console.log(city, 'Came from Memory');
+  //   response.json( locationCache[city] );
+  //   return;
+  // }
 
-    superagent.get(url)
-      .query(queryStringParams)
-      .then( data => {
-        let locationData = data.body[0];
-        // console.log(locationData);
-        let location = new Location(city, locationData);
-        response.json(location);
-      });
-  }
-  catch(error) {
-    let errorObject = {
-      status: 500,
-      responseText: 'john is ugly or something',
-    };
-    response.status(500).json(errorObject);
-  }
+  client.query(SQL)
+    .then( results => {
+      if ( results.rowCount > 0 ) {
+        response.status(200).json(results.rows);
+        console.log('we have it in sql db');
+      } else {
+        // if not in sql db, runs api call
+        const url = 'https://us1.locationiq.com/v1/search.php';
+        const queryStringParams = {
+          key: process.env.LOCATION_TOKEN,
+          q: city,
+          format: 'json',
+          limit: 1,
+        };
+        superagent.get(url)
+          .query(queryStringParams)
+          .then( data => {
+            let locationData = data.body[0];
+            console.log('this is the locationdata:', locationData);
+            let location = new Location(city, locationData);
+            response.json(location);
+          });
+        // response.status(400).send('No Results Found man');
+        console.log('sup its not in the db man');
+      }
+    })
+    .catch(error => response.status(500).send(error));
 }
+
 
 function Location(city, data) {
   this.search_query = city;

@@ -9,6 +9,12 @@ const cors = require('cors');
 const express = require('express');
 const superagent = require('superagent');
 
+// pg
+const pg = require('pg');
+const client = new pg.Client(process.env.DATABASE_URL)
+client.connect();
+
+
 const PORT = process.env.PORT;
 
 const app = express();
@@ -19,11 +25,33 @@ app.get('/location', handleLocation);
 
 function handleLocation( request, response ) {
   try {
-    let city = request.query.city;
+    let city = request.query.city.toLowerCase();
     // eventually, get this from a real live API
     // But today, pull it from a file.
 
     // throw 'john is ugly or something';
+
+    // check if in sql db first
+
+    const SQL = `SELECT * FROM locations WHERE search_query='${city}`;
+
+    // if( locationCache[city] ) {
+    //   console.log(city, 'Came from Memory');
+    //   response.json( locationCache[city] );
+    //   return;
+    // }
+
+    client.query(SQL)
+      .then( results => {
+        if ( results.rowCount > 0 ) {
+          response.status(200).json(results.rows);
+        } else {
+          response.status(400).send('No Results Found');
+        }
+      })
+      .catch(error => response.status(500).send(error));
+
+    // if not in sql db, runs api call
 
     const url = 'https://us1.locationiq.com/v1/search.php';
     const queryStringParams = {

@@ -11,7 +11,7 @@ const superagent = require('superagent');
 
 // pg
 const pg = require('pg');
-const client = new pg.Client(process.env.DATABASE_URL)
+const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
 
 
@@ -33,7 +33,7 @@ function handleLocation( request, response ) {
 
     // check if in sql db first
 
-    const SQL = `SELECT * FROM locations WHERE search_query='${city}`;
+    const SQL = `SELECT * FROM locations WHERE search_query='${city}'`;
 
     // if( locationCache[city] ) {
     //   console.log(city, 'Came from Memory');
@@ -45,8 +45,10 @@ function handleLocation( request, response ) {
       .then( results => {
         if ( results.rowCount > 0 ) {
           response.status(200).json(results.rows);
+          console.log('we have it in sql db');
         } else {
-          response.status(400).send('No Results Found');
+          response.status(400).send('No Results Found man');
+          console.log('sup its not in the db man');
         }
       })
       .catch(error => response.status(500).send(error));

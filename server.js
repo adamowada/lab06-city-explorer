@@ -23,7 +23,7 @@ function Location(city, data) {
 }
 
 function Weather(data) {
-  this.time = `${new Date(data.time * 1000).getMonth()+1}-${new Date(data.time * 1000).getDate()}-${new Date(data.time * 1000).getFullYear()}`; 
+  this.time = `${new Date(data.time * 1000).getMonth()+1}-${new Date(data.time * 1000).getDate()}-${new Date(data.time * 1000).getFullYear()}`;
   this.forecast = data.summary;
 }
 
@@ -65,7 +65,7 @@ function handleLocation( request, response ) {
             const newSql = `
             INSERT INTO locations(search_query, formatted_query, latitude, longitude)
             VALUES($1, $2, $3, $4)
-            `
+            `;
             const VALUES = [location.search_query, location.formatted_query, location.latitude, location.longitude];
             client.query(newSql, VALUES)
               .then( () => response.json(location));

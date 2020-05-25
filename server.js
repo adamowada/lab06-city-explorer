@@ -15,6 +15,15 @@ app.use(cors());
 app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
 app.get('/movies', handleMovies);
+app.get('/yelp', handleYelp);
+
+function Restaurant(data) {
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.price;
+  this.rating = data.rating;
+  this.url = data.url;
+}
 
 function Movie(data) {
   this.title = data.title;
@@ -48,6 +57,20 @@ function Trails(data) {
   this.conditions = data.conditionDetails;
   this.condition_date = data.conditionDate.match(/\d\d\d\d-\d\d-\d\d/);
   this.condition_time = data.conditionDate.match(/\d\d:\d\d:\d\d/);
+}
+
+function handleYelp (request, response) {
+  const url = 'https://api.yelp.com/v3/businesses/search';
+  const queryStringParams = {
+    location: request.query.search_query.toLowerCase(),
+  }
+  superagent.get(url)
+    .set('Authorization', `Bearer ${process.env.YELP_API_KEY}`)
+    .query(queryStringParams)
+    .then(data => {
+      let yelp = data.body.businesses.map(place => new Restaurant(place));
+      response.json(yelp);
+    })
 }
 
 function handleMovies (request, response) {

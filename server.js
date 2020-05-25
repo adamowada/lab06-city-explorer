@@ -14,6 +14,16 @@ client.connect();
 app.use(cors());
 app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
+app.get('/movies', handleMovies);
+
+function Movie(data) {
+  this.title = data.title;
+  this.overview = data.overview;
+  this.average_votes = data.vote_average;
+  this.image_url = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
+  this.popularity = data.popularity;
+  this.released_on = data.release_date;
+}
 
 function Location(city, data) {
   this.search_query = city;
@@ -38,6 +48,21 @@ function Trails(data) {
   this.conditions = data.conditionDetails;
   this.condition_date = data.conditionDate.match(/\d\d\d\d-\d\d-\d\d/);
   this.condition_time = data.conditionDate.match(/\d\d:\d\d:\d\d/);
+}
+
+function handleMovies (request, response) {
+  const url = 'https://api.themoviedb.org/3/search/movie';
+  const queryStringParams = {
+    api_key: process.env.MOVIE_API_KEY,
+    query: request.query.search_query.toLowerCase(),
+    page: 1,
+  }
+  superagent.get(url)
+    .query(queryStringParams)
+    .then(data => {
+      let movies = data.body.results.map(movie => new Movie(movie));
+      response.json(movies);
+    })
 }
 
 function handleLocation( request, response ) {
@@ -116,42 +141,6 @@ function handleTrails( request, response ) {
       response.status(500).send('Bad Trails Request');
     });
 }
-
-app.get('/trails', handleTrails);
-function handleTrails( request, response ) {
-  const url = 'https://www.hikingproject.com/data/get-trails';
-  const queryStringParams = {
-    lat: request.query.latitude,
-    lon: request.query.longitude,
-    key: process.env.TRAIL_TOKEN,
-  };
-  superagent.get(url)
-    .query(queryStringParams)
-    .then( data => {
-      console.log(data.body.trails);
-      const listOfTrails = data.body.trails.map( trail => new Trails(trail) );
-      response.json(listOfTrails);
-    })
-    .catch(error => {
-      console.log(error);
-      response.status(500).send('Bad Trails Request');
-    });
-}
-
-function Trails(data) {
-  this.name = data.name;
-  this.location = data.location;
-  this.length = data.length;
-  this.stars = data.stars;
-  this.star_votes = data.starVotes;
-  this.summary = data.summary;
-  this.trail_url = data.url;
-  this.conditions = data.conditionDetails;
-  this.condition_date = data.conditionDate.match(/\d\d\d\d-\d\d-\d\d/);
-  this.condition_time = data.conditionDate.match(/\d\d:\d\d:\d\d/);
-}
-
-
 
 app.listen( PORT, () => console.log('Server up on', PORT));
 
